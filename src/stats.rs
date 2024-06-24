@@ -6,6 +6,7 @@ use isolang::Language;
 #[cfg(feature = "battery")]
 use std::fmt::Display;
 use std::fs;
+use std::net::{IpAddr, Ipv6Addr};
 use std::path::PathBuf;
 use std::time::Duration;
 use std::{collections::HashMap, net::Ipv4Addr};
@@ -244,13 +245,22 @@ pub fn get_temp() -> Option<Temp> {
     Some(Temp(data.trim().parse::<i32>().ok()?))
 }
 
-pub fn ip(iptype: IpType) -> Option<Ipv4Addr> {
+pub fn ip(iptype: IpType) -> Option<IpAddr> {
     match iptype {
         IpType::Public => {
             let response = minreq::get("http://ifconfig.me").send();
             let res = response.ok()?;
             let res_str = res.as_str().ok()?;
-            return res_str.parse::<Ipv4Addr>().ok();
+
+            let v4addr = res_str.parse::<Ipv4Addr>();
+            if let Ok(v4addr) = v4addr {
+                return Some(IpAddr::V4(v4addr));
+            }
+
+            let v6addr = res_str.parse::<Ipv6Addr>();
+            if let Ok(v6addr) = v6addr {
+                return Some(IpAddr::V6(v6addr));
+            }
         }
         IpType::Private => {
             let addrs = nix::ifaddrs::getifaddrs().ok()?;
@@ -261,7 +271,7 @@ pub fn ip(iptype: IpType) -> Option<Ipv4Addr> {
                         let x = x.to_string();
                         let addr = x.split(':').next()?.parse::<Ipv4Addr>().ok()?;
                         if addr.is_private() {
-                            return Some(addr);
+                            return Some(IpAddr::V4(addr));
                         }
                     }
                 }

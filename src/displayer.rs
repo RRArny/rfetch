@@ -144,23 +144,41 @@ impl Displayer {
     }
 
     fn show_ip(&self) -> Option<String> {
-        let ip_type = if self.config.ip.public {
-            stats::IpType::Public
-        } else {
-            stats::IpType::Private
-        };
-        let ip_info = stats::ip(ip_type);
-        let output = &format!(
-            "{}   {} {}\n",
+        let mut output: String = format!(
+            "{}   {}",
             "ip".color(self.config.title_color.clone()),
-            self.config.delimiter,
-            if let Some(ip_info) = ip_info {
-                ip_info.to_string()
-            } else {
-                "not connected".to_string()
-            }
+            self.config.delimiter
         );
-        Some(String::from(output))
+
+        if self.config.ip.private {
+            let ip_info = stats::ip(stats::IpType::Private);
+            output = format!(
+                "{} {}",
+                output,
+                if let Some(ip_info) = ip_info {
+                    ip_info.to_string()
+                } else {
+                    "not connected".to_string()
+                }
+            );
+        }
+        if self.config.ip.private && self.config.ip.public {
+            output = format!("{} / ", output);
+        }
+        if self.config.ip.public {
+            let ip_info = stats::ip(stats::IpType::Public);
+            output = format!(
+                "{}{}",
+                output,
+                if let Some(ip_info) = ip_info {
+                    ip_info.to_string()
+                } else {
+                    "not connected".to_string()
+                }
+            );
+        };
+        output = format!("{}\n", output);
+        Some(output)
     }
 
     fn show_cpu(&self) -> Option<String> {

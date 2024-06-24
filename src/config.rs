@@ -27,6 +27,7 @@ pub struct UserHostConfig {
 #[derive(Deserialize, Debug)]
 pub struct IpConfig {
     pub public: bool,
+    pub private: bool,
 }
 
 impl Config {
@@ -70,7 +71,10 @@ impl Default for Config {
                 line_symbol: String::from("-"),
                 line_color: String::from("magenta"),
             },
-            ip: IpConfig { public: false },
+            ip: IpConfig {
+                public: false,
+                private: false,
+            },
         }
     }
 }
